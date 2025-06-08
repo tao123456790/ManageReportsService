@@ -10,28 +10,31 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import {
+  Button
+} from '@mui/material';
 import "./Dashboard.css";
+import { useNavigate } from "react-router-dom";
+
 const apiUrl = process.env.REACT_APP_API_URL;
-// import { useNavigate } from "react-router-dom";
 
 
 const Dashboard = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   // State เก็บข้อมูลสาขาจาก API
   const [branchData, setBranchData] = useState([]);
   // State เก็บ error กรณี fetch ไม่สำเร็จ
   const [error, setError] = useState(null);
   // State สำหรับแสดง loading
   const [loading, setLoading] = useState(true);
-
+ const userRole = localStorage.getItem('role'); 
   useEffect(() => {
     // ฟังก์ชันดึงข้อมูลจาก API
     const fetchBranchData = async () => {
       try {
         const res = await fetch(`${apiUrl}/report`);
         if (!res.ok) throw new Error("Fetch failed");
-        const data = await res.json();
-        console.log("data : ", data)
+        const data = await res.json(); 
 
         setBranchData(data);
       } catch (err) {
@@ -56,7 +59,12 @@ const Dashboard = () => {
 
   return (
 
-    <div className="dashboard-container">  
+    <div className="dashboard-container">
+      {userRole === 'admin' && (
+        <Button variant="contained" color="primary" onClick={() => navigate('/reportManager')}>
+          จัดการรายงาน
+        </Button>
+      )}
       <h1 className="dashboard-title">📊 Dashboard รายงานผลประกอบการ</h1>
 
       <div className="kpi-container">

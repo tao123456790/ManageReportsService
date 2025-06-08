@@ -8,10 +8,11 @@ import {
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import ApiService from './service';
-
+import { useNavigate } from 'react-router-dom';
 const apiUrl = process.env.REACT_APP_API_URL;
 
 const ReportManager = () => {
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [branch, setBranch] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,8 +51,7 @@ const ReportManager = () => {
   };
 
   // เปิด dialog เพื่อแก้ไขสาขาเดิม
-  const handleOpenEdit = (report) => {
-    console.log("EDIT REQ : ", report)
+  const handleOpenEdit = (report) => { 
     setForm({
       branchId: report.branchId,
       branchName: report.branchName,
@@ -73,36 +73,41 @@ const ReportManager = () => {
     const revenue = Number(form.revenue);
     const profit = Number(form.profit);
     const target = Number(form.target);
+    const branchName = form.branchName
 
-    if ([revenue, profit, target].some(val => isNaN(val) || val < 0)) {
-      alert('กรุณากรอกข้อมูลรายได้ กำไร และเป้าหมาย ให้เป็นตัวเลขที่มากกว่าหรือเท่ากับ 0');
-      return;
-    }
+
 
     try {
+      if ([revenue, profit, target].some(val => isNaN(val) || val < 0)) {
+        alert('กรุณากรอกข้อมูลรายได้ กำไร และเป้าหมาย ให้เป็นตัวเลขที่มากกว่าหรือเท่ากับ 0');
+        return;
+      }
+
+      const isDuplicate = reports.some(element => element.branchId === branchId);
+
+      if (isDuplicate) {
+        alert('สาขา : ' + form.branchName + ' มีอยู่แล้ว');
+        return; // หรือ return false/หยุดการดำเนินการ
+      }
       if (editingReport) {
+        const oldBranchId = Number(editingReport.branchId);
+
         // แก้ไขข้อมูล (PUT)
         const updatedReport = await ApiService.putJson(`${apiUrl}/editReport`, {
+          oldBranchId: oldBranchId,
           branchId: branchId,
-          branchName: form.branchName,
+          branchName: branchName,
           revenue,
           profit,
           target
         });
 
-        // อัพเดตรายการใน state จาก response
-        // console.log("updatedReport ; ", updatedReport)
+        // อัพเดตรายการใน state จาก response 
         setReports(prev =>
           prev.map(r => (r.branchId === editingReport.branchId ? updatedReport : r))
         );
       } else {
 
-        const isDuplicate = reports.some(element => element.branchId === branchId);
-
-        if (isDuplicate) {
-          alert('สาขา : ' + form.branchName + ' มีอยู่แล้ว');
-          return; // หรือ return false/หยุดการดำเนินการ
-        }
 
         // เพิ่มข้อมูลใหม่ (POST)
         const newReport = await ApiService.postJson(`${apiUrl}/saveReport`, {
@@ -114,7 +119,7 @@ const ReportManager = () => {
         });
         // เพิ่มข้อมูลที่ได้จาก server ลง state 
         setReports(prev => [...prev, newReport]);
-      }
+      } 
       setOpenDialog(false);
       setEditingReport(null);
       setForm({ branchId: '', branchName: '', revenue: '', profit: '', target: '' });
@@ -143,10 +148,17 @@ const ReportManager = () => {
         <Typography variant="h5" gutterBottom>
           จัดการรายงาน
         </Typography>
+        <Box display="flex" gap={2}>
+          <Button variant="contained" color="primary" onClick={() => navigate('/dashboard')}>
+            ภาพรวม
+          </Button>
 
-        <Button variant="contained" color="primary" onClick={handleOpenAdd}>
-          เพิ่มรายงาน
-        </Button>
+          <Button variant="contained" color="primary" onClick={handleOpenAdd}>
+            เพิ่มรายงาน
+          </Button>
+        </Box>
+
+
 
         <Table sx={{ mt: 2 }}>
           <TableHead>

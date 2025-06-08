@@ -25,9 +25,7 @@ class ApiService {
 
       if (data) {
         options.body = JSON.stringify(data);
-      }
-
-      console.log("options : " , options)
+      } 
       
       const response = await fetch(url, options);
 

@@ -99,23 +99,22 @@ app.get('/api/getBranchName', async (req, res) => {
 // POST: เพิ่มข้อมูลใหม่
 app.post('/api/saveReport', (req, res) => {
     try {
-        const {branchId, branchName, profit, revenue, target } = req.body;
+        const { branchId, branchName, profit, revenue, target } = req.body;
 
         if (!branchName || profit == null || revenue == null || target == null) {
             return res.status(400).json({ message: 'กรุณาระบุ branchName, profit, revenue, target ให้ครบถ้วน' });
         }
 
         // const newId = performanceReports.length ? Math.max(...performanceReports.map(r => r.id)) + 1 : 1;
-        const newReport = { 
-            branchId: branchId,  
+        const newReport = {
+            branchId: branchId,
             branchName,
             profit,
             revenue,
             target
         };
         performanceReports.push(newReport);
-
-        console.log("performanceReports save : " ,performanceReports)
+ 
         res.status(200).json(newReport);
     } catch (error) {
         console.error('POST Error:', error);
@@ -126,14 +125,16 @@ app.post('/api/saveReport', (req, res) => {
 // PUT: แก้ไขข้อมูลตาม id
 app.put('/api/editReport', (req, res) => {
     try {
-        const { branchId, branchName, profit, revenue, target } = req.body;
+        const { oldBranchId, branchId, branchName, profit, revenue, target } = req.body;
 
+        const parsedOldId = parseInt(oldBranchId);
+        const parsedNewId = parseInt(branchId); 
         if (isNaN(branchId)) {
             return res.status(400).json({ message: 'branchId ไม่ถูกต้อง' });
         }
 
         const reportIndex = performanceReports.findIndex(
-            r => r.branchId === parseInt(branchId)
+            r => r.branchId === parseInt(parsedOldId)
         );
 
         if (reportIndex === -1) {
@@ -148,12 +149,12 @@ app.put('/api/editReport', (req, res) => {
 
         performanceReports[reportIndex] = {
             ...performanceReports[reportIndex],
+            branchId: parsedNewId,
             branchName,
             profit,
             revenue,
             target
-        };
-        console.log("performanceReports edit : " ,performanceReports)
+        }; 
         res.json(performanceReports[reportIndex]);
     } catch (error) {
         console.error('PUT Error:', error);
@@ -168,15 +169,13 @@ app.delete('/api/deleteReport', (req, res) => {
 
         if (isNaN(id)) {
             return res.status(400).json({ message: 'ID ไม่ถูกต้อง' });
-        }
-        console.log("Delete id : " , id)
+        } 
         const initialLength = performanceReports.length;
         performanceReports = performanceReports.filter(r => r.branchId !== id);
 
         if (performanceReports.length === initialLength) {
             return res.status(404).json({ message: 'ไม่พบข้อมูลที่ต้องการลบ' });
-        }
-        console.log("performanceReports edit : " ,performanceReports)
+        } 
         res.json({ message: `ลบข้อมูล ID ${id} สำเร็จ` });
     } catch (error) {
         console.error('DELETE Error:', error);

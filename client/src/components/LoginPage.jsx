@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 const apiUrl = process.env.REACT_APP_API_URL;
 
-const LoginPage = () => {
+const LoginPage = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,8 +11,6 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-
-      console.log("PORT : " , process.env)
       const res = await fetch(`${apiUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -20,11 +18,16 @@ const LoginPage = () => {
       });
 
       if (!res.ok) throw new Error('Login failed');
-      const resData = await res.json(); 
-      if (resData.data.role === "user") {
-        navigate('/dashboard'); 
+
+      const resData = await res.json();
+      const userRole = resData.data.role;
+      localStorage.setItem('role', userRole);
+      onLoginSuccess();
+
+      if (userRole === "user") {
+        navigate('/dashboard');
       } else {
-        navigate('/reportManager'); 
+        navigate('/reportManager');
       }
 
     } catch (err) {
@@ -53,8 +56,6 @@ const LoginPage = () => {
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </form>
     </div>
-
-
   );
 };
 
