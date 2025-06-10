@@ -51,7 +51,7 @@ const ReportManager = () => {
   };
 
   // เปิด dialog เพื่อแก้ไขสาขาเดิม
-  const handleOpenEdit = (report) => { 
+  const handleOpenEdit = (report) => {
     setForm({
       branchId: report.branchId,
       branchName: report.branchName,
@@ -83,15 +83,16 @@ const ReportManager = () => {
         return;
       }
 
-      const isDuplicate = reports.some(element => element.branchId === branchId);
 
-      if (isDuplicate) {
-        alert('สาขา : ' + form.branchName + ' มีอยู่แล้ว');
-        return; // หรือ return false/หยุดการดำเนินการ
-      }
       if (editingReport) {
-        const oldBranchId = Number(editingReport.branchId);
-
+        const oldBranchId = Number(editingReport.branchId); 
+        const isDuplicate = reports.some(
+          element => element.branchId === branchId && element.branchId !== oldBranchId
+        );
+        if (isDuplicate) {
+          alert('สาขา : ' + form.branchName + ' มีอยู่แล้ว');
+          return; 
+        }
         // แก้ไขข้อมูล (PUT)
         const updatedReport = await ApiService.putJson(`${apiUrl}/editReport`, {
           oldBranchId: oldBranchId,
@@ -102,14 +103,17 @@ const ReportManager = () => {
           target
         });
 
-        // อัพเดตรายการใน state จาก response 
         setReports(prev =>
           prev.map(r => (r.branchId === editingReport.branchId ? updatedReport : r))
         );
       } else {
+        const isDuplicate = reports.some(element => element.branchId === branchId);
 
+        if (isDuplicate) {
+          alert('สาขา : ' + form.branchName + ' มีอยู่แล้ว');
+          return; 
+        }
 
-        // เพิ่มข้อมูลใหม่ (POST)
         const newReport = await ApiService.postJson(`${apiUrl}/saveReport`, {
           branchId: branchId,
           branchName: form.branchName,
@@ -117,9 +121,8 @@ const ReportManager = () => {
           profit,
           target
         });
-        // เพิ่มข้อมูลที่ได้จาก server ลง state 
         setReports(prev => [...prev, newReport]);
-      } 
+      }
       setOpenDialog(false);
       setEditingReport(null);
       setForm({ branchId: '', branchName: '', revenue: '', profit: '', target: '' });
